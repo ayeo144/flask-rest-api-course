@@ -27,7 +27,7 @@ class Item(Resource):
         item = ItemModel.get_item_by_name(name)
 
         if item is not None:
-            return item
+            return item.to_json()
         return {'message': 'Item not found'}, 404
 
     def post(self, name):
@@ -40,14 +40,14 @@ class Item(Resource):
 
         data = Item.parser.parse_args()
 
-        item = {'name': name, 'price': data['price']}
+        item = ItemModel(name, data['price'])
 
         try:
-            ItemModel.insert_item(item)
+            item.insert()
         except:
             return {'message': 'An error occurred inserting an item.'}, 500 # Internal Server Error
 
-        return item, 201 # HTTPS 201 is the code for creating something
+        return item.to_json(), 201 # HTTPS 201 is the code for creating something
 
     def delete(self, name):
 
@@ -66,22 +66,22 @@ class Item(Resource):
         data = Item.parser.parse_args()
 
         item = ItemModel.get_item_by_name(name)
-        updated_item = {'name': name, 'price': data['price']}
+        updated_item = ItemModel(name, data['price'])
         if item is None:
 
             try:
-                ItemModel.insert_item(updated_item)
+                updated_item.insert()
             except:
                 return {'message': 'An error occurred inserting an item.'}, 500
 
         else:
 
             try:
-                ItemModel.update_item(updated_item)
+                updated_item.update()
             except:
                 return {'message': 'An error occurred updating an item.'}, 500
 
-        return updated_item
+        return updated_item.to_json()
 
 
 class ItemList(Resource):
