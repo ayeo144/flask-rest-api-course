@@ -1,5 +1,3 @@
-import sqlite3
-
 from db import db
 
 """
@@ -27,52 +25,13 @@ class ItemModel(db.Model):
         return {'name': self.name, 'price': self.price}
 
     @classmethod
-    def get_item_by_name(cls, name):
-        """
-        Keep this as a classmethod that can now return an
-        instance of ItemModel.
+    def find_by_name(cls, name):
+        return cls.query.filter_by(name=name).first()
 
-        'cls' calls the __init__ method of whatever class it
-        is a classmethod of
-        """
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
+    def save_to_db(self):
+        db.session.add(self) # because we have extended this class with db.Model we can just add self as a record
+        db.session.commit()
 
-        query = """SELECT * FROM items WHERE name=?;"""
-        result = cursor.execute(query, (name, ))
-        row = result.fetchone()
-
-        connection.close()
-
-        if row is not None:
-            name, price = row # unpack into name and price
-            return cls(name, price)
-
-    def insert(self):
-        """
-        Update to use self and work in instance of ItemModel with
-        name and price atributes. So we can call 
-                >> item = ItemModel(name, price)
-                >> item.insert()
-        """
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-
-        query = """INSERT INTO items VALUES (?, ?);"""
-        cursor.execute(query, (self.name, self.price))
-
-        connection.commit()
-        connection.close()
-
-    def update(self):
-        """
-        Similar logic to self.insert()
-        """
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-
-        query = """UPDATE items SET price=? WHERE name=?;"""
-        cursor.execute(query, (self.price, self.name))
-
-        connection.commit()
-        connection.close()
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()

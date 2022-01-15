@@ -24,7 +24,7 @@ class Item(Resource):
         # the first object from the filter
         # if 'next' doesn't find an item, return None
         """
-        item = ItemModel.get_item_by_name(name)
+        item = ItemModel.find_by_name(name)
 
         if item is not None:
             return item.to_json()
@@ -34,7 +34,7 @@ class Item(Resource):
         # we only want unique names in our item list, so check if item name already
         # exists in our 'items' list
         # Fail Fast!
-        if ItemModel.get_item_by_name(name) is not None:
+        if ItemModel.find_by_name(name) is not None:
             # 400 is the status code for 'bad request'
             return {'message': f"An item with name '{name}' already exists"}, 400
 
@@ -43,45 +43,35 @@ class Item(Resource):
         item = ItemModel(name, data['price'])
 
         try:
-            item.insert()
+            item.save_to_db()
         except:
             return {'message': 'An error occurred inserting an item.'}, 500 # Internal Server Error
 
         return item.to_json(), 201 # HTTPS 201 is the code for creating something
 
     def delete(self, name):
-
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-
-        query = """DELETE FROM items WHERE name=?;"""
-        cursor.execute(query, (name, ))
-
-        connection.commit()
-        connection.close()
+        item = ItemModel.find_by_name()
+        if item is not None:
+            item.delete_from_db()
 
         return {'message': 'Item deleted'}
 
     def put(self, name):
         data = Item.parser.parse_args()
 
-        item = ItemModel.get_item_by_name(name)
-        updated_item = ItemModel(name, data['price'])
+        item = ItemModel.find_by_name(name)
+
         if item is None:
 
-            try:
-                updated_item.insert()
-            except:
-                return {'message': 'An error occurred inserting an item.'}, 500
-
+            item = ItemModel(name, data['price'])
+            
         else:
 
-            try:
-                updated_item.update()
-            except:
-                return {'message': 'An error occurred updating an item.'}, 500
+            item.price = data['price']
 
-        return updated_item.to_json()
+        item.save_to_db() # if the price has changed, SQLAlchemy will update, if it doesn't exist it will add a new record
+
+        return item.to_json()
 
 
 class ItemList(Resource):
