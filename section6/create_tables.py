@@ -14,6 +14,7 @@ cursor.execute(create_users_table)
 
 create_items_table = """
     CREATE TABLE IF NOT EXISTS items (
+        id INTEGER PRIMARY KEY,
         name text, 
         price real 
     );"""

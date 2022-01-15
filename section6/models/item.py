@@ -1,12 +1,23 @@
 import sqlite3
 
+from db import db
+
 """
 We now have an ItemModel class which contains the properties of
 an item (name and price), however it also has several methods
 such as insert/update/get. Do these methods really belong in this class?
 """
 
-class ItemModel:
+class ItemModel(db.Model):
+
+    __tablename__ = 'items'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+    price = db.Column(db.Float(precision=2))
+
+    # Now using Flask-SQLAlchemy, the name and price values from the
+    # database are put into the __init__ method below to create an object
 
     def __init__(self, name, price):
         self.name = name
