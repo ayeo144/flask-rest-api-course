@@ -1,5 +1,3 @@
-import sqlite3
-
 from flask_restful import Resource, reqparse
 from flask_jwt import jwt_required
 
@@ -10,6 +8,7 @@ class Item(Resource):
 
     parser = reqparse.RequestParser()
     parser.add_argument('price', type=float, required=True)
+    parser.add_argument('store_id', type=int, required=True)
 
     @jwt_required()
     def get(self, name):
@@ -40,7 +39,7 @@ class Item(Resource):
 
         data = Item.parser.parse_args()
 
-        item = ItemModel(name, data['price'])
+        item = ItemModel(name, data['price'], data['store_id'])
 
         try:
             item.save_to_db()
@@ -50,7 +49,7 @@ class Item(Resource):
         return item.to_json(), 201 # HTTPS 201 is the code for creating something
 
     def delete(self, name):
-        item = ItemModel.find_by_name()
+        item = ItemModel.find_by_name(name)
         if item is not None:
             item.delete_from_db()
 
@@ -63,13 +62,14 @@ class Item(Resource):
 
         if item is None:
 
-            item = ItemModel(name, data['price'])
+            item = ItemModel(name, data['price'], data['store_id'],)
             
         else:
 
             item.price = data['price']
+            item.store_id = data['store_id']
 
-        item.save_to_db() # if the price has changed, SQLAlchemy will update, if it doesn't exist it will add a new record
+        item.save_to_db() 
 
         return item.to_json()
 
@@ -77,15 +77,4 @@ class Item(Resource):
 class ItemList(Resource):
 
     def get(self):
-
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-
-        query = """SELECT * FROM items;"""
-        result = cursor.execute(query)
-
-        items = [{'name': row[0], 'price': row[1]} for row in result]
-
-        connection.close()
-
-        return {'items': items} # remember, 'items' is a list so we need to put it in a dictionary first
+        return {'items': [item.to_json() for item in ItemModel.query.all()]} 
