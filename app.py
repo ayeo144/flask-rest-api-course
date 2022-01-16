@@ -15,12 +15,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # we have told the app we h
 app.secret_key = 'alex'
 api = Api(app)
 
-@app.before_first_request
-def create_tables():
-    """
-    Creates all the tables in the database.
-    """
-    db.create_all()
+# @app.before_first_request
+# def create_tables():
+#     """
+#     Creates all the tables in the database.
+#     """
+#     db.create_all()
 
 # when we initialise the JWT class, we use our functions for
 # authentication and getting user ID's
