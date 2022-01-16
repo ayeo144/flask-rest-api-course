@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_restful import Api
 from flask_jwt import JWT
@@ -8,8 +10,15 @@ from resources.store import Store, StoreList
 from security import authenticate, identity
 
 
+def get_db_url():
+    """Get the URL from Heroku OS, if not found, use the local sqlite db instead"""
+    url = os.environ.get('DATABASE_URL', 'sqlite:///data.db')
+    url_parts = url.split('//')
+    return 'postgresql://' + url_parts[1]
+
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = get_db_url() 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # we have told the app we have two models coming from our database
 app.secret_key = 'alex'
 api = Api(app)
