@@ -10,6 +10,8 @@ from resources.store import Store, StoreList
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# if Flask JWT raies an error, then Flask will propagate the correct errors
 app.config['PROPAGATE_EXCEPTIONS'] = True
 app.secret_key = 'jose'
 api = Api(app)
