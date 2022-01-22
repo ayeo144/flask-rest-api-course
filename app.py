@@ -1,58 +1,32 @@
-import os
-
 from flask import Flask
 from flask_restful import Api
 from flask_jwt import JWT
 
+from security import authenticate, identity
 from resources.user import UserRegister
 from resources.item import Item, ItemList
 from resources.store import Store, StoreList
-from security import authenticate, identity
-
-
-def get_db_url():
-    """Get the URL from Heroku OS, if not found, use the local sqlite db instead"""
-    url = os.environ.get('DATABASE_URL', 'sqlite:///data.db')
-    url_parts = url.split('//')
-    return 'postgresql://' + url_parts[1]
-
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = get_db_url() 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # we have told the app we have two models coming from our database
-app.secret_key = 'alex'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['PROPAGATE_EXCEPTIONS'] = True
+app.secret_key = 'jose'
 api = Api(app)
 
-# @app.before_first_request
-# def create_tables():
-#     """
-#     Creates all the tables in the database.
-#     """
-#     db.create_all()
 
-# when we initialise the JWT class, we use our functions for
-# authentication and getting user ID's
-# This creates a new endpoint for our API, /auth
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
-# /auth, when we call this we send a username and password, which gets sent
-# to out authenticate function
-# if authentication is succesful, the endpoint returns a JW token
-# this token is then sent along with any more requests, and the identity function
-# uses it to get the user ID
-# if it can do this, then the user was authenticated and the token is valid
-jwt = JWT(app, authenticate, identity) 
 
-"""
-With Flask-Restful we don't need to use flask.jsonify, we can
-just return a dictionary instead.
-"""
+jwt = JWT(app, authenticate, identity)  # /auth
 
 api.add_resource(Store, '/store/<string:name>')
-api.add_resource(Item, '/item/<string:name>')
 api.add_resource(StoreList, '/stores')
+api.add_resource(Item, '/item/<string:name>')
 api.add_resource(ItemList, '/items')
 api.add_resource(UserRegister, '/register')
-
 
 if __name__ == '__main__':
     from db import db
