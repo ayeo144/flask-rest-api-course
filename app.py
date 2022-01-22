@@ -24,6 +24,20 @@ def create_tables():
 
 jwt = JWTManager(app)  # no longer creating /auth
 
+@jwt.additional_claims_loader
+def add_claims_to_jwt(identity):
+    """
+    Whenever a JWT is created, this function will
+    run to see if any additional data should be added
+    to the token.
+    """
+    # First user created is an admin user
+    if identity == 1: # instead of hard-coding, this should be in database or config
+        return {'is_admin': True}
+    return {'is_admin': False}
+
+
+
 api.add_resource(Store, '/store/<string:name>')
 api.add_resource(StoreList, '/stores')
 api.add_resource(Item, '/item/<string:name>')
