@@ -1,5 +1,9 @@
 from werkzeug.security import safe_str_cmp
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import (
+    create_access_token, 
+    create_refresh_token, 
+    jwt_required, 
+    get_jwt_identity)
 from flask_restful import Resource, reqparse
 
 from models.user import UserModel
@@ -66,4 +70,15 @@ class UserLogin(Resource):
                 'refresh_token': refresh_token
             }, 200
 
-        return {'message': 'Invalid credentials'}, 401
+        return {'message': 'Invalid credentials'}
+
+
+class TokenRefresh(Resource):
+
+    @jwt_required(refresh=True)
+    def post(self):
+        current_user = get_jwt_identity()
+        # if token is fresh then user has just logged in
+        # if it is not fresh, the user has logged in a long time ago
+        new_token = create_access_token(identity=current_user, fresh=False)
+        return {'access_token': new_token}
